@@ -3,6 +3,7 @@ package ai;
 import ai.Global;
 import java.io.*;
 import java.net.*;
+import java.util.*;
 import javax.swing.*;
 import java.awt.*;
 import kalaha.*;
@@ -24,13 +25,17 @@ public class AIClient implements Runnable
     private Socket socket;
     private boolean running;
     private boolean connected;
+    
+    private int[] movesUtility;
     	
     /**
      * Creates a new client.
      */
     public AIClient()
     {
-	player = -1;
+    	movesUtility = new int[6];
+    	
+    	player = -1;
         connected = false;
         
         //This is some necessary client stuff. You don't need
@@ -212,8 +217,60 @@ public class AIClient implements Runnable
      */
     public int getMove(GameState currentBoard)
     {
-        int myMove = getRandom();
-        return myMove;
+    	int chosenAmbo = iterativeMinimax(currentBoard);
+    	return chosenAmbo;
+    }
+    
+    public int iterativeMinimax(GameState currentBoard)
+    {
+    	thinkMoves(currentBoard);
+    	
+    	int indexOfHighest = 0, highestValue = 0;
+    	for(int index = 0; index < movesUtility.length; index++)
+    	{
+    		if(movesUtility[index] > highestValue)
+    		{
+    			highestValue = movesUtility[index];
+    			indexOfHighest = index;
+    		}
+    	}
+    	
+    	return indexOfHighest + 1;
+    }
+    
+    public void thinkMoves(GameState board)
+    {
+    	// Cloning the game board 6 times for every move you can do
+    	GameState[] boardAfterTurn = new GameState[6];
+    	for(int j = 0; j < boardAfterTurn.length; j++)
+    	{
+    		boardAfterTurn[j] = board.clone();
+    	}
+    	
+    	// Simulating every possible move...
+    	for(int pAmbo = 0; pAmbo < 6; pAmbo++)
+    	{
+    		boardAfterTurn[pAmbo].makeMove(pAmbo+1);
+    		
+    		// ...and check then if any board state is over(Game finished)
+	    	for(int i = 0; i < boardAfterTurn.length; i++)
+	    	{
+	    		if(boardAfterTurn[i].gameEnded())
+	    		{
+		    		if(boardAfterTurn[i].getWinner() == player)
+		    		{
+		    			movesUtility[i]++;	// If the player wins here the utility of the chosen ambo gets +1
+		    		}
+		    		if(boardAfterTurn[i].getWinner() != player && boardAfterTurn[i].getWinner() != 0)
+		    		{
+		    			movesUtility[i]--;	// If the player loses here the utility of the chosen ambo gets -1
+		    		}
+		    		// If it's a draw, add 0(do nothing).
+	    		}
+	    		// If the game didn't end yet, simulate next moves.
+	    		thinkMoves(boardAfterTurn[i]);
+	    	}
+    	}
     }
     
     /**
