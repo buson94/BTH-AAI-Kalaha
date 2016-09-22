@@ -9,10 +9,10 @@ import java.awt.*;
 import kalaha.*;
 
 /**
- * This is the main class for your Kalaha AI bot. Currently
- * it only makes a random, valid move each turn.
+ * This is the class where the AI bot is defined.
+ * It uses the Minimax with iterative deepening.
  * 
- * @author Johan Hagelbäck
+ * @author Marvin Uwe Marken
  */
 public class AIClient implements Runnable
 {
@@ -209,16 +209,13 @@ public class AIClient implements Runnable
     }
     
     /**
-     * This is the method that makes a move each time it is your turn.
-     * Here you need to change the call to the random method to your
-     * Minimax search.
+     * This is the method that makes a move each time it is the bots turn.
      * 
      * @param currentBoard The current board state
      * @return Move to make (1-6)
      */
     public int getMove(GameState currentBoard)
     {
-    	count = 0;
     	int chosenAmbo = iterativeMinimax(currentBoard);
     	return chosenAmbo;
     }
@@ -227,7 +224,7 @@ public class AIClient implements Runnable
     {
     	int moveChoice = 0;
     	thinkMoves(currentBoard);
-    	moveChoice = minimaximizer(true);
+    	moveChoice = minimaximize(true, movesUtility);
     	
     	return moveChoice;
     }
@@ -249,41 +246,42 @@ public class AIClient implements Runnable
     		// ...and check then if any board state is over(Game finished)
 	    	for(int i = 0; i < boardAfterTurn.length; i++)
 	    	{
-	    		if(boardAfterTurn[i].gameEnded())
+	    		int winner = boardAfterTurn[i].getWinner();	// -1 = NOT OVER, 0 = DRAW, 1 = PLAYER 1, 2 = PLAYER 2
+	    		if(winner == player)
 	    		{
-		    		if(boardAfterTurn[i].getWinner() == player)
-		    		{
-		    			movesUtility[i]++;	// If the player wins here the utility of the chosen ambo gets +1
-		        		count++;
-		        		System.out.println("Saved a win! " + count);
-		    		}
-		    		if(boardAfterTurn[i].getWinner() != player && boardAfterTurn[i].getWinner() != 0)
-		    		{
-		    			movesUtility[i]--;	// If the player loses here the utility of the chosen ambo gets -1
-		        		count++;
-		        		System.out.println("Saved a lose! " + count);
-		    		}
-		    		// If it's a draw, add 0(do nothing).
+	    			movesUtility[i]++;	// If the player wins here the utility of the chosen ambo gets +1
 	    		}
-	    		// If the game didn't end yet, simulate next moves.
+	    		if(winner != player && winner <= 0)
+	    		{
+	    			movesUtility[i]--;	// If the player loses here the utility of the chosen ambo gets -1
+	    		}
+	    		// If it's a draw, do nothing
+		    	
+	    		// If the game didn't end yet, simulate next possible moves.
 	    		thinkMoves(boardAfterTurn[i]);
 	    	}
     	}
     }
     
-    public int minimaximizer(boolean highest)		// If false, look for lowest
+    /**
+     * A method to get the index of a minimum or maximum of an array.
+     * @param max If this boolean is true, the method looks for the maximum and if it's false, it looks for the minimum. 
+     * @param utility Is the array with numbers of possible wins in it 
+     * @return Index of the highest/lowest value 
+     */
+    public int minimaximize(boolean max, int[] utility)
     {
-    	int indexValue = 0, value = highest? -1000 : 1000;
-    	for(int index = 0; index < movesUtility.length; index++)
+    	int indexValue = 0, value = max? -1000 : 1000;
+    	for(int index = 0; index < utility.length; index++)
     	{
-    		if(highest && movesUtility[index] > value)
+    		if(max && utility[index] > value)
 	    	{
-    			value = movesUtility[index];
+    			value = utility[index];
     			indexValue = index;
     		}
-    		if(!highest && movesUtility[index] < value)
+    		if(!max && utility[index] < value)
     		{
-    			value = movesUtility[index];
+    			value = utility[index];
     			indexValue = index;
     		}
     	}
