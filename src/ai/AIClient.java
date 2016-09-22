@@ -27,6 +27,7 @@ public class AIClient implements Runnable
     private boolean connected;
     
     private int[] movesUtility;
+    private int count;
     	
     /**
      * Creates a new client.
@@ -217,25 +218,18 @@ public class AIClient implements Runnable
      */
     public int getMove(GameState currentBoard)
     {
+    	count = 0;
     	int chosenAmbo = iterativeMinimax(currentBoard);
     	return chosenAmbo;
     }
     
     public int iterativeMinimax(GameState currentBoard)
     {
+    	int moveChoice = 0;
     	thinkMoves(currentBoard);
+    	moveChoice = minimaximizer(true);
     	
-    	int indexOfHighest = 0, highestValue = 0;
-    	for(int index = 0; index < movesUtility.length; index++)
-    	{
-    		if(movesUtility[index] > highestValue)
-    		{
-    			highestValue = movesUtility[index];
-    			indexOfHighest = index;
-    		}
-    	}
-    	
-    	return indexOfHighest + 1;
+    	return moveChoice;
     }
     
     public void thinkMoves(GameState board)
@@ -260,10 +254,14 @@ public class AIClient implements Runnable
 		    		if(boardAfterTurn[i].getWinner() == player)
 		    		{
 		    			movesUtility[i]++;	// If the player wins here the utility of the chosen ambo gets +1
+		        		count++;
+		        		System.out.println("Saved a win! " + count);
 		    		}
 		    		if(boardAfterTurn[i].getWinner() != player && boardAfterTurn[i].getWinner() != 0)
 		    		{
 		    			movesUtility[i]--;	// If the player loses here the utility of the chosen ambo gets -1
+		        		count++;
+		        		System.out.println("Saved a lose! " + count);
 		    		}
 		    		// If it's a draw, add 0(do nothing).
 	    		}
@@ -271,6 +269,25 @@ public class AIClient implements Runnable
 	    		thinkMoves(boardAfterTurn[i]);
 	    	}
     	}
+    }
+    
+    public int minimaximizer(boolean highest)		// If false, look for lowest
+    {
+    	int indexValue = 0, value = highest? -1000 : 1000;
+    	for(int index = 0; index < movesUtility.length; index++)
+    	{
+    		if(highest && movesUtility[index] > value)
+	    	{
+    			value = movesUtility[index];
+    			indexValue = index;
+    		}
+    		if(!highest && movesUtility[index] < value)
+    		{
+    			value = movesUtility[index];
+    			indexValue = index;
+    		}
+    	}
+    	return indexValue + 1;
     }
     
     /**
