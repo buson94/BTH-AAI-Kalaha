@@ -25,17 +25,12 @@ public class AIClient implements Runnable
     private Socket socket;
     private boolean running;
     private boolean connected;
-    
-    private int[] movesUtility;
-    private int count;
     	
     /**
      * Creates a new client.
      */
     public AIClient()
-    {
-    	movesUtility = new int[6];
-    	
+    {    	
     	player = -1;
         connected = false;
         
@@ -224,7 +219,7 @@ public class AIClient implements Runnable
     {
     	int moveChoice = 0;
     	thinkMoves(currentBoard);
-    	moveChoice = minimaximize(true, movesUtility);
+    	//moveChoice = minimaximize(true);
     	
     	return moveChoice;
     }
@@ -238,6 +233,8 @@ public class AIClient implements Runnable
     		boardAfterTurn[j] = board.clone();
     	}
     	
+    	Node[] node = new Node[6];
+    	
     	// Simulating every possible move...
     	for(int pAmbo = 0; pAmbo < 6; pAmbo++)
     	{
@@ -249,11 +246,11 @@ public class AIClient implements Runnable
 	    		int winner = boardAfterTurn[i].getWinner();	// -1 = NOT OVER, 0 = DRAW, 1 = PLAYER 1, 2 = PLAYER 2
 	    		if(winner == player)
 	    		{
-	    			movesUtility[i]++;	// If the player wins here the utility of the chosen ambo gets +1
+	    			node[i].addToValue(1);	// If the player wins here the utility of the chosen ambo gets +1
 	    		}
 	    		if(winner != player && winner <= 0)
 	    		{
-	    			movesUtility[i]--;	// If the player loses here the utility of the chosen ambo gets -1
+	    			node[i].addToValue(-1);	// If the player loses here the utility of the chosen ambo gets -1
 	    		}
 	    		// If it's a draw, do nothing
 		    	
@@ -269,7 +266,7 @@ public class AIClient implements Runnable
      * @param utility Is the array with numbers of possible wins in it 
      * @return Index of the highest/lowest value 
      */
-    public int minimaximize(boolean max, int[] utility)
+    /*public int minimaximize(boolean max)
     {
     	int indexValue = 0, value = max? -1000 : 1000;
     	for(int index = 0; index < utility.length; index++)
@@ -286,7 +283,7 @@ public class AIClient implements Runnable
     		}
     	}
     	return indexValue + 1;
-    }
+    }*/
     
     /**
      * Returns a random ambo number (1-6) used when making
