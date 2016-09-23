@@ -218,45 +218,42 @@ public class AIClient implements Runnable
     public int iterativeMinimax(GameState currentBoard)
     {
     	int moveChoice = 0;
-    	thinkMoves(currentBoard);
+    	Node initialNode = new Node(currentBoard);
+    	thinkMoves(initialNode);
     	//moveChoice = minimaximize(true);
     	
     	return moveChoice;
     }
     
-    public void thinkMoves(GameState board)
+    public void thinkMoves(Node node)
     {
-    	// Cloning the game board 6 times for every move you can do
-    	GameState[] boardAfterTurn = new GameState[6];
-    	for(int j = 0; j < boardAfterTurn.length; j++)
-    	{
-    		boardAfterTurn[j] = board.clone();
-    	}
-    	
-    	Node[] node = new Node[6];
-    	
+		Node[] pNodes = node.getNextNodes();
+		
     	// Simulating every possible move...
     	for(int pAmbo = 0; pAmbo < 6; pAmbo++)
     	{
-    		boardAfterTurn[pAmbo].makeMove(pAmbo+1);
+    		GameState simBoard = pNodes[pAmbo].getBoard();
+    		simBoard.makeMove(pAmbo+1);
+    		pNodes[pAmbo].setBoard(simBoard.clone());
     		
     		// ...and check then if any board state is over(Game finished)
-	    	for(int i = 0; i < boardAfterTurn.length; i++)
+	    	for(int i = 0; i < pNodes.length; i++)
 	    	{
-	    		int winner = boardAfterTurn[i].getWinner();	// -1 = NOT OVER, 0 = DRAW, 1 = PLAYER 1, 2 = PLAYER 2
+	    		GameState endBoard = pNodes[i].getBoard();
+	    		int winner = endBoard.getWinner();	// -1 = NOT OVER, 0 = DRAW, 1 = PLAYER 1, 2 = PLAYER 2
 	    		if(winner == player)
 	    		{
-	    			node[i].addToValue(1);	// If the player wins here the utility of the chosen ambo gets +1
+	    			pNodes[i].addToValue(1);	// If the player wins here the utility of the chosen ambo gets +1
 	    		}
 	    		if(winner != player && winner <= 0)
 	    		{
-	    			node[i].addToValue(-1);	// If the player loses here the utility of the chosen ambo gets -1
+	    			pNodes[i].addToValue(-1);	// If the player loses here the utility of the chosen ambo gets -1
 	    		}
 	    		// If it's a draw, do nothing
-		    	
-	    		// If the game didn't end yet, simulate next possible moves.
-	    		thinkMoves(boardAfterTurn[i]);
 	    	}
+    		// If the game didn't end here, simulate next possible moves.
+    		for(Node n : pNodes)
+    			thinkMoves(n);
     	}
     }
     
