@@ -1,17 +1,23 @@
 package ai;
 
+import kalaha.GameState;
+
 public class Node 
 {
 	private int utilityValue;
+	private GameState board;
+	private Node[] nextNodes;
 	
-	public Node()
+	public Node(GameState newBoard)
 	{
 		setValue(0);
-	}
-	
-	public Node(int value)
-	{
-		setValue(value);
+		board = newBoard.clone();
+		if(!board.gameEnded())
+		{
+			nextNodes = new Node[6];
+			for(Node n : nextNodes)
+				n = new Node(board.clone());
+		}
 	}
 	
 	public void setValue(int value)
@@ -22,6 +28,21 @@ public class Node
 	public int getValue()
 	{
 		return utilityValue;
+	}
+	
+	public void setBoard(GameState newBoard)
+	{
+		board = newBoard;
+	}
+	
+	public GameState getBoard()
+	{
+		return board.clone();
+	}
+	
+	public Node[] getNextNodes()
+	{
+		return nextNodes;
 	}
 	
 	/**
