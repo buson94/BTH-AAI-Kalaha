@@ -186,7 +186,7 @@ public class AIClient implements Runnable
                 //Wait
                 Thread.sleep(100);
             }
-	}
+        }
         catch (Exception ex)
         {
             running = false;
@@ -227,7 +227,7 @@ public class AIClient implements Runnable
     	// Simulating every possible move...
     	for(int pAmbo = 0; pAmbo < 6; pAmbo++)
     	{
-    		GameState simBoard = pNodes[pAmbo].getBoard();
+    		GameState simBoard = pNodes[pAmbo].getBoard();	//	Here it gets an exception?
     		if(simBoard.moveIsPossible(pAmbo))
     		{
     			simBoard.makeMove(pAmbo+1);
