@@ -211,12 +211,6 @@ public class AIClient implements Runnable
      */
     public int getMove(GameState currentBoard)
     {
-    	int chosenAmbo = iterativeMinimax(currentBoard);
-    	return chosenAmbo;
-    }
-    
-    public int iterativeMinimax(GameState currentBoard)
-    {
     	int moveChoice = 0;
     	Node initialNode = new Node(currentBoard);
     	thinkMoves(initialNode);
@@ -227,34 +221,43 @@ public class AIClient implements Runnable
     
     public void thinkMoves(Node node)
     {
+    	node.createNextNodes();
 		Node[] pNodes = node.getNextNodes();
 		
     	// Simulating every possible move...
     	for(int pAmbo = 0; pAmbo < 6; pAmbo++)
     	{
     		GameState simBoard = pNodes[pAmbo].getBoard();
-    		simBoard.makeMove(pAmbo+1);
-    		pNodes[pAmbo].setBoard(simBoard.clone());
-    		
-    		// ...and check then if any board state is over(Game finished)
-	    	for(int i = 0; i < pNodes.length; i++)
-	    	{
-	    		GameState endBoard = pNodes[i].getBoard();
-	    		int winner = endBoard.getWinner();	// -1 = NOT OVER, 0 = DRAW, 1 = PLAYER 1, 2 = PLAYER 2
-	    		if(winner == player)
-	    		{
-	    			pNodes[i].addToValue(1);	// If the player wins here the utility of the chosen ambo gets +1
-	    		}
-	    		if(winner != player && winner <= 0)
-	    		{
-	    			pNodes[i].addToValue(-1);	// If the player loses here the utility of the chosen ambo gets -1
-	    		}
-	    		// If it's a draw, do nothing
-	    	}
-    		// If the game didn't end here, simulate next possible moves.
-    		for(Node n : pNodes)
-    			thinkMoves(n);
+    		if(simBoard.moveIsPossible(pAmbo))
+    		{
+    			simBoard.makeMove(pAmbo+1);
+    			pNodes[pAmbo].setBoard(simBoard.clone());
+    		}
     	}
+    	// ...and then setting the utility value of a node to the difference in score
+    	for(int i = 0; i < pNodes.length; i++)
+    	{
+    		GameState endBoard = pNodes[i].getBoard();
+    		int ownScore = 0, enemyScore = 0;
+    		for(int a = 0; a < 6; a++)
+    		{
+    			if(player == 1)
+    			{
+	    			ownScore += endBoard.getScore(1);
+	    			enemyScore += endBoard.getScore(2);
+    			}
+    			else
+    			{
+	    			ownScore += endBoard.getScore(2);
+	    			enemyScore += endBoard.getScore(1);
+    			}
+    		}
+    		int difference = ownScore - enemyScore;
+    		pNodes[i].setValue(difference);
+    	}
+		// If the game didn't end here, simulate next possible moves.
+		for(Node n : pNodes)
+			thinkMoves(n);
     }
     
     /**

@@ -12,12 +12,6 @@ public class Node
 	{
 		setValue(0);
 		board = newBoard.clone();
-		if(!board.gameEnded())
-		{
-			nextNodes = new Node[6];
-			for(Node n : nextNodes)
-				n = new Node(board.clone());
-		}
 	}
 	
 	public void setValue(int value)
@@ -45,11 +39,10 @@ public class Node
 		return nextNodes;
 	}
 	
-	/**
-	 * Method that simply adds a value to the utilityValue of the node.
-	 */
-	public void addToValue(int value)
+	public void createNextNodes()
 	{
-		utilityValue += value;
+		nextNodes = new Node[6];
+		for(Node n : nextNodes)
+			n = new Node(board.clone());
 	}
 }
