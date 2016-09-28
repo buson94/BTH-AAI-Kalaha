@@ -211,15 +211,21 @@ public class AIClient implements Runnable
      */
     public int getMove(GameState currentBoard)
     {
-    	int moveChoice = 0;
-    	Node initialNode = new Node(currentBoard);
-    	thinkMoves(initialNode);
-    	//moveChoice = minimaximize(true);
+    	Node initialNode = new Node(currentBoard, -1, player);
+    	IterationStop iterationStop = new IterationStop((long) (4*Math.pow(10, 9)));
     	
-    	return moveChoice;
+    	int maxDeepeningLvl = 1;
+    	while(!iterationStop.stop(-1))
+    	{
+    		iterationStop.setMaxDeepeningLvl(maxDeepeningLvl);
+    		initialNode.visit(0, iterationStop);
+    		maxDeepeningLvl++;
+    	}
+    	System.out.println("After: " + maxDeepeningLvl);
+    	return initialNode.getBestMove();
     }
     
-    public void thinkMoves(Node node)
+    /*public void thinkMoves(Node node)
     {
     	node.createNextNodes();
 		Node[] pNodes = node.getNextNodes();
@@ -258,7 +264,7 @@ public class AIClient implements Runnable
 		// If the game didn't end here, simulate next possible moves.
 		for(Node n : pNodes)
 			thinkMoves(n);
-    }
+    }*/
     
     /**
      * A method to get the index of a minimum or maximum of an array.
