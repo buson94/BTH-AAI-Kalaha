@@ -213,15 +213,17 @@ public class AIClient implements Runnable
     {
     	Node initialNode = new Node(currentBoard, -1, player);
     	IterationStop iterationStop = new IterationStop((long) (4*Math.pow(10, 9)));
+        PruningManager pruningManager = new PruningManager();
     	
     	int maxDeepeningLvl = 1;
-    	while(!iterationStop.stop(-1))
+        int value = 0;
+    	while(!iterationStop.stop(-1) && maxDeepeningLvl < 100)
     	{
     		iterationStop.setMaxDeepeningLvl(maxDeepeningLvl);
-    		initialNode.visit(0, iterationStop);
+    		value = initialNode.visit(0, iterationStop, pruningManager);
     		maxDeepeningLvl++;
     	}
-    	System.out.println("After: " + maxDeepeningLvl);
+    	addText("After: " + maxDeepeningLvl + " and Score: " + value);
     	return initialNode.getBestMove();
     }
     

@@ -10,7 +10,6 @@ public class Node
 	private int utilityValue = 0;
 	private GameState board;
 	private ArrayList<Node> nextNodes = new ArrayList<Node>(6);
-	private boolean isMaxNode;
 	private int bestMove = -1;
 	private int madeMove;
 	private boolean hasBeenExpanded = false;
@@ -40,75 +39,74 @@ public class Node
 		return madeMove;
 	}
 	
-	public int visit(int deepeningLvl, IterationStop iterationStop)
+	public int visit(int deepeningLvl, IterationStop iterationStop, PruningManager pruningManager)
 	{
-		if(!iterationStop.stop(deepeningLvl))
+		if(iterationStop.stop(deepeningLvl)) {
+            return calculateBoardUtilityValue();
+        }
+        
+        if (!hasBeenExpanded)
 		{
-			expand();
-			for(Node n : nextNodes)
-				n.visit(deepeningLvl + 1, iterationStop);
-		}
-		
-		calculateUtilityValue();
-		return utilityValue;
-	}
-	
-	private void calculateUtilityValue() 
-	{
-		// Reset Utility Value
-		if(board.getNextPlayer() == player)
-			utilityValue = -100000;
-		else
-			utilityValue = 100000;
-		
-		// If no child nodes exist then calculate the utility value
-		if(nextNodes.size() == 0) 
-		{
-			utilityValue = calculateBoardUtilityValue();
-		}
-		else
-		{
-			for(Node n : nextNodes)
-			{
-				if(board.getNextPlayer() == player)
-				{
-					if(n.getUtilityValue() > utilityValue || 
-					   n.getUtilityValue() == utilityValue && Math.random() < 0.5)
-					{
-						utilityValue = n.getUtilityValue();
-						bestMove = n.getMadeMove();
-					}
-				}
-				else 
-				{
-					if(n.getUtilityValue() < utilityValue || 
-					   n.getUtilityValue() == utilityValue && Math.random() < 0.5)
-					{
-						utilityValue = n.getUtilityValue();
-						bestMove = n.getMadeMove();
-					}
-				}
-			}
-		}
-	}
-
-	private void expand() 
-	{
-		if(!hasBeenExpanded)
-		{
-			for(int i = 1; i < 7; i++)
+            resetUtilityValue();
+			for(int i = 6; i >= 1; i--)
 			{
 				if(board.moveIsPossible(i))
 				{
 					Node nextNode = new Node(board, i, player);
 					nextNodes.add(nextNode);
+                    int value = nextNode.visit(deepeningLvl + 1, iterationStop, pruningManager);
+                    updateUtilityValue(value, nextNode.getMadeMove());
+                    if (pruningManager.pruneBranch(value, isMaxNode()))
+                        break;
 				}
 			}
+            hasBeenExpanded = true;
+            return utilityValue;
 		}
-		
-		hasBeenExpanded = true;
+        else if (nextNodes.size() > 0) {
+            resetUtilityValue();
+            for(Node n : nextNodes) {
+				int value = n.visit(deepeningLvl + 1, iterationStop, pruningManager);
+                updateUtilityValue(value, n.getMadeMove());
+            }
+            return utilityValue;
+        }
+        else {
+            return calculateBoardUtilityValue();
+        }
 	}
-
+    
+    private void resetUtilityValue () {
+        // Reset Utility Value
+		if(isMaxNode())
+			utilityValue = Integer.MIN_VALUE;
+		else
+			utilityValue = Integer.MAX_VALUE;
+    }
+	
+	private void updateUtilityValue(int nextNodeUtilityValue, int move) {
+        if(isMaxNode())
+        {
+            if(nextNodeUtilityValue > utilityValue 
+             //  || nextNodeUtilityValue == utilityValue && Math.random() < 0.5
+               )
+            {
+                utilityValue = nextNodeUtilityValue;
+                bestMove = move;
+            }
+        }
+        else 
+        {
+            if(nextNodeUtilityValue < utilityValue 
+             //  || nextNodeUtilityValue == utilityValue && Math.random() < 0.5
+               )
+            {
+                utilityValue = nextNodeUtilityValue;
+                bestMove = move;
+            }
+        }
+	}
+    
 	private int calculateBoardUtilityValue()
 	{
 		int ownScore = 0, enemyScore = 0;
@@ -122,7 +120,11 @@ public class Node
 			ownScore += board.getScore(2);
 			enemyScore += board.getScore(1);
 		}
-		int difference = ownScore - enemyScore;
-		return difference;
+        utilityValue = ownScore - enemyScore;
+		return utilityValue;
 	}
+    
+    private boolean isMaxNode() {
+        return board.getNextPlayer() == player;
+    }
 }
