@@ -13,6 +13,8 @@ public class Node
 	private int bestMove = -1;
 	private int madeMove;
 	private boolean hasBeenExpanded = false;
+    private int alpha = Integer.MIN_VALUE;
+    private int beta = Integer.MAX_VALUE;
 	
 	public Node(GameState currentBoard, int moveToMake, int player)
 	{
@@ -39,57 +41,63 @@ public class Node
 		return madeMove;
 	}
 	
-	public int visit(int deepeningLvl, IterationStop iterationStop, PruningManager pruningManager)
+	public int visit(int deepeningLvl, IterationStop iterationStop)
 	{
-		if(iterationStop.stop(deepeningLvl)) {
+		if(iterationStop.stop(deepeningLvl)) 
+		{
             return calculateBoardUtilityValue();
         }
         
         if (!hasBeenExpanded)
 		{
-            resetUtilityValue();
+            resetAlphaBetaValues();
 			for(int i = 6; i >= 1; i--)
 			{
 				if(board.moveIsPossible(i))
 				{
 					Node nextNode = new Node(board, i, player);
 					nextNodes.add(nextNode);
-                    int value = nextNode.visit(deepeningLvl + 1, iterationStop, pruningManager);
+                    int value = nextNode.visit(deepeningLvl + 1, iterationStop);
                     updateUtilityValue(value, nextNode.getMadeMove());
-                    if (pruningManager.pruneBranch(value, isMaxNode()))
+                    if (pruneBranch(value, isMaxNode()))
                         break;
 				}
 			}
             hasBeenExpanded = true;
             return utilityValue;
 		}
-        else if (nextNodes.size() > 0) {
-            resetUtilityValue();
-            for(Node n : nextNodes) {
-				int value = n.visit(deepeningLvl + 1, iterationStop, pruningManager);
+        else if (nextNodes.size() > 0) 
+        {
+            resetAlphaBetaValues();
+            for(Node n : nextNodes) 
+            {
+				int value = n.visit(deepeningLvl + 1, iterationStop);
                 updateUtilityValue(value, n.getMadeMove());
             }
             return utilityValue;
         }
-        else {
+        else 
+        {
             return calculateBoardUtilityValue();
         }
 	}
     
-    private void resetUtilityValue () {
-        // Reset Utility Value
+    private void resetAlphaBetaValues () 
+    {
 		if(isMaxNode())
 			utilityValue = Integer.MIN_VALUE;
 		else
 			utilityValue = Integer.MAX_VALUE;
+		
+		alpha = Integer.MIN_VALUE;
+		beta = Integer.MAX_VALUE;
     }
 	
-	private void updateUtilityValue(int nextNodeUtilityValue, int move) {
+	private void updateUtilityValue(int nextNodeUtilityValue, int move) 
+	{
         if(isMaxNode())
         {
-            if(nextNodeUtilityValue > utilityValue 
-             //  || nextNodeUtilityValue == utilityValue && Math.random() < 0.5
-               )
+            if(nextNodeUtilityValue > utilityValue)
             {
                 utilityValue = nextNodeUtilityValue;
                 bestMove = move;
@@ -97,9 +105,7 @@ public class Node
         }
         else 
         {
-            if(nextNodeUtilityValue < utilityValue 
-             //  || nextNodeUtilityValue == utilityValue && Math.random() < 0.5
-               )
+            if(nextNodeUtilityValue < utilityValue)
             {
                 utilityValue = nextNodeUtilityValue;
                 bestMove = move;
@@ -112,19 +118,34 @@ public class Node
 		int ownScore = 0, enemyScore = 0;
 		if(player == 1)
 		{
-			ownScore += board.getScore(1);
-			enemyScore += board.getScore(2);
+			ownScore = board.getScore(1);
+			enemyScore = board.getScore(2);
 		}
 		else
 		{
-			ownScore += board.getScore(2);
-			enemyScore += board.getScore(1);
+			ownScore = board.getScore(2);
+			enemyScore = board.getScore(1);
 		}
         utilityValue = ownScore - enemyScore;
 		return utilityValue;
 	}
     
-    private boolean isMaxNode() {
+    private boolean isMaxNode() 
+    {
         return board.getNextPlayer() == player;
+    }
+    
+    public boolean pruneBranch(int value, boolean isMaxNode) 
+    {
+        if (isMaxNode) 
+        {
+            alpha = value > alpha ? value : alpha;
+            return value > beta;
+        }
+        else 
+        {
+            beta = value < beta ? value : beta;
+            return value < alpha;
+        }
     }
 }
