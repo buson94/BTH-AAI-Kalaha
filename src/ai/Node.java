@@ -50,7 +50,7 @@ public class Node
         
         if (!hasBeenExpanded)
 		{
-            resetAlphaBetaValues();
+            resetUtilityValue();
 			for(int i = 6; i >= 1; i--)
 			{
 				if(board.moveIsPossible(i))
@@ -68,7 +68,7 @@ public class Node
 		}
         else if (nextNodes.size() > 0) 
         {
-            resetAlphaBetaValues();
+            resetUtilityValue();
             for(Node n : nextNodes) 
             {
 				int value = n.visit(deepeningLvl + 1, iterationStop);
@@ -82,15 +82,12 @@ public class Node
         }
 	}
     
-    private void resetAlphaBetaValues () 
+    private void resetUtilityValue () 
     {
 		if(isMaxNode())
 			utilityValue = Integer.MIN_VALUE;
 		else
 			utilityValue = Integer.MAX_VALUE;
-		
-		alpha = Integer.MIN_VALUE;
-		beta = Integer.MAX_VALUE;
     }
 	
 	private void updateUtilityValue(int nextNodeUtilityValue, int move) 
@@ -135,9 +132,9 @@ public class Node
         return board.getNextPlayer() == player;
     }
     
-    public boolean pruneBranch(int value, boolean isMaxNode) 
+    private boolean pruneBranch(int value, boolean isMaxNode) 
     {
-        if (isMaxNode) 
+        if (isMaxNode)
         {
             alpha = value > alpha ? value : alpha;
             return value > beta;

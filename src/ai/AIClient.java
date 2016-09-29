@@ -209,22 +209,22 @@ public class AIClient implements Runnable
      */
     public int getMove(GameState currentBoard)
     {
-    	// Creates an initial Node given the current Board, 
-    	// an invalid move to make (because it shouldn't start directly here) 
-    	// and the player number of the bot
-    	Node initialNode = new Node(currentBoard, -1, player);
     	// Creates a timer that gets a max. time of 4*10^9 nanoseconds (4 seconds)
-    	IterationStop iterationStop = new IterationStop((long) (4*Math.pow(10, 9)));
+    	IterationStop iterationStop = new IterationStop((long) (3*Math.pow(10, 9)));
     	
-    	int maxDeepeningLvl = 1;
-        int value = 0;
+    	int maxDeepeningLvl = 1, value = 0, bestMove = 0;
     	while(!iterationStop.stop(-1) && maxDeepeningLvl < 100)
     	{
+        	// Creates an initial Node given the current Board, 
+        	// an invalid move to make (because it shouldn't start directly here) 
+        	// and the player number of the bot
+        	Node initialNode = new Node(currentBoard, -1, player);
     		iterationStop.setMaxDeepeningLvl(maxDeepeningLvl);
     		value = initialNode.visit(0, iterationStop);
+    		bestMove = initialNode.getBestMove();
     		maxDeepeningLvl++;
     	}
     	addText("After: " + maxDeepeningLvl + " and Score: " + value);
-    	return initialNode.getBestMove();
+    	return bestMove;
     }
 }
