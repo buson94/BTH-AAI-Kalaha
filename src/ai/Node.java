@@ -8,15 +8,13 @@ import kalaha.GameState;
 public class Node 
 {
 	private final int player;
-	private final int madeMove;
 	private final GameState board;
 	private int utilityValue = 0;
 	private int bestMove = -1;
 	
-	public Node(GameState currentBoard, int moveToMake, int player)
+	public Node(GameState currentBoard, int player)
 	{
 		board = currentBoard;
-		this.madeMove = moveToMake;
 		this.player = player;
         resetUtilityValue();
 	}
@@ -29,11 +27,6 @@ public class Node
 	public int getBestMove()
 	{
 		return bestMove;
-	}
-	
-	public int getMadeMove()
-	{
-		return madeMove;
 	}
 	
 	public int visit(int deepeningLvl, IterationManager iterationManager, int alpha, int beta)
@@ -50,7 +43,7 @@ public class Node
                 gameEnded = false;
                 GameState nextBoard = board.clone();
                 nextBoard.makeMove(moveIndex);
-                Node nextNode = new Node(nextBoard, moveIndex, player);
+                Node nextNode = new Node(nextBoard, player);
                 int value = nextNode.visit(deepeningLvl + 1, iterationManager, alpha, beta);
                 updateUtilityValue(value, moveIndex);
                 if (isMaxNode()) {

@@ -217,15 +217,16 @@ public class AIClient implements Runnable
     	int maxDeepeningLvl = 2;
         int bestValue = -Integer.MIN_VALUE;
         int bestMove = 0;
-    	while(!iterationStop.timeOver() && maxDeepeningLvl < 200)
+    	while(!iterationStop.timeOver() && maxDeepeningLvl < 16)
     	{
-            Node initialNode = new Node(currentBoard, -1, player);
     		iterationStop.setMaxDeepeningLvl(maxDeepeningLvl);
-    		int value = initialNode.visit(0, iterationStop, Integer.MIN_VALUE, Integer.MAX_VALUE);
+            
+            Node root = new Node(currentBoard, player);
+    		int value = root.visit(0, iterationStop, bestValue, Integer.MAX_VALUE);
             long diffTime = (System.nanoTime() - startTime) / (1000 * 1000);
             if (value > bestValue) {
                 bestValue = value;
-                bestMove = initialNode.getBestMove();
+                bestMove = root.getBestMove();
                 addText(moveCount + ". Better Move: " + bestMove + " in Depth: " + maxDeepeningLvl + " and Score: " + bestValue + " after " + diffTime + "ms");
             }
     		maxDeepeningLvl++;
