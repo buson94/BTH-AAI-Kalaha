@@ -5,7 +5,6 @@ public class IterationManager
 	private long startTime;
 	private long maxRunningTime;
 	private int maxDeepeningLvl;
-    public long lastTime;
 	
 	public IterationManager(long maxRunningTime)
 	{
@@ -24,11 +23,10 @@ public class IterationManager
     
     public boolean timeOver() {
         
-        long diff = System.nanoTime() - startTime;
-        boolean timeOver = diff > maxRunningTime;
-        if (!timeOver)
-            lastTime = diff;
-        return timeOver;   
+        return false;
+        //long diff = System.nanoTime() - startTime;
+        //boolean timeOver = diff > maxRunningTime;
+        //return timeOver;   
     }
 	
 	public void setMaxDeepeningLvl(int lvl)

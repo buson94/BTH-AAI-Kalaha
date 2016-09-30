@@ -7,31 +7,19 @@ import kalaha.GameState;
 
 public class Node 
 {
-	private int player;
+	private final int player;
+	private final int madeMove;
+	private final GameState board;
 	private int utilityValue = 0;
-	private GameState board;
-	private ArrayList<Node> nextNodes = new ArrayList<Node>(6);
 	private int bestMove = -1;
-	private int madeMove;
-	private boolean hasBeenExpanded = false;
 	
 	public Node(GameState currentBoard, int moveToMake, int player)
 	{
-		board = currentBoard.clone();
-		if(moveToMake > 0 && moveToMake <= 6)
-			board.makeMove(moveToMake);
-		
+		board = currentBoard;
 		this.madeMove = moveToMake;
 		this.player = player;
+        resetUtilityValue();
 	}
-    
-    public Node getNextNode(int moveToTake) {
-        for (Node n : nextNodes) {
-            if (n.getMadeMove() == moveToTake)
-                return n;
-        }
-        return null;
-    }
 	
 	public int getUtilityValue()
 	{
@@ -53,41 +41,32 @@ public class Node
 		if(iterationManager.depthReached(deepeningLvl)) {
             return calculateBoardUtilityValue();
         }
-        
-        if (!hasBeenExpanded)
-		{
-			for(int i = 6; i >= 1; i--)
-			{
-				if(board.moveIsPossible(i))
-				{
-					Node nextNode = new Node(board, i, player);
-					nextNodes.add(nextNode);
-				}
-			}
-            hasBeenExpanded = true;
-		}
-        
-        // Check for Terminal Node
-        if (nextNodes.size() > 0) {
-            resetUtilityValue();
-            for(Node nextNode : nextNodes) {
-                if (iterationManager.timeOver())
-                    break;
+        boolean gameEnded = true;
+        for(int moveIndex = 6; moveIndex >= 1; moveIndex--)
+        {
+            if (iterationManager.timeOver()) break;
+            if(board.moveIsPossible(moveIndex))
+            {
+                gameEnded = false;
+                GameState nextBoard = board.clone();
+                nextBoard.makeMove(moveIndex);
+                Node nextNode = new Node(nextBoard, moveIndex, player);
                 int value = nextNode.visit(deepeningLvl + 1, iterationManager, alpha, beta);
-                updateUtilityValue(value, nextNode.getMadeMove());
+                updateUtilityValue(value, moveIndex);
                 if (isMaxNode()) {
                     if (value > beta) break;
                     alpha = Math.max(value, alpha);
                 }
                 else {
                     if (value < alpha) break;
-                    beta = Math.min(value, alpha);
+                    beta = Math.min(value, beta);
                 }
             }
-            return utilityValue;
         }
-        else {
+        if (gameEnded) {
             return calculateBoardUtilityValue();
+        } else {
+            return utilityValue;
         }
 	}
     
@@ -123,18 +102,10 @@ public class Node
 	}
     
 	private int calculateBoardUtilityValue()
-	{
+	{   
 		int ownScore = 0, enemyScore = 0;
-		if(player == 1)
-		{
-			ownScore += board.getScore(1);
-			enemyScore += board.getScore(2);
-		}
-		else
-		{
-			ownScore += board.getScore(2);
-			enemyScore += board.getScore(1);
-		}
+        ownScore += board.getScore(player);
+        enemyScore += board.getScore((player % 2) + 1);
         utilityValue = ownScore - enemyScore;
 		return utilityValue;
 	}

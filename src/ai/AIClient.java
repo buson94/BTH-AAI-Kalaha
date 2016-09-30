@@ -23,6 +23,7 @@ public class AIClient implements Runnable
     private Socket socket;
     private boolean running;
     private boolean connected;
+    private int moveCount;
     	
     /**
      * Creates a new client.
@@ -209,26 +210,26 @@ public class AIClient implements Runnable
      */
     public int getMove(GameState currentBoard)
     {
+        moveCount++;
         long startTime = System.nanoTime();
-    	IterationManager iterationStop = new IterationManager((long) (4*Math.pow(10, 9)));
+    	IterationManager iterationStop = new IterationManager((long) (5*Math.pow(10, 9)));
     	
-    	int maxDeepeningLvl = 1;
+    	int maxDeepeningLvl = 2;
         int bestValue = -Integer.MIN_VALUE;
         int bestMove = 0;
-    	while(!iterationStop.stop(-1) && maxDeepeningLvl < 200)
+    	while(!iterationStop.timeOver() && maxDeepeningLvl < 200)
     	{
             Node initialNode = new Node(currentBoard, -1, player);
     		iterationStop.setMaxDeepeningLvl(maxDeepeningLvl);
     		int value = initialNode.visit(0, iterationStop, Integer.MIN_VALUE, Integer.MAX_VALUE);
+            long diffTime = (System.nanoTime() - startTime) / (1000 * 1000);
             if (value > bestValue) {
                 bestValue = value;
                 bestMove = initialNode.getBestMove();
+                addText(moveCount + ". Better Move: " + bestMove + " in Depth: " + maxDeepeningLvl + " and Score: " + bestValue + " after " + diffTime + "ms");
             }
     		maxDeepeningLvl++;
-            long diffTime = (System.nanoTime() - startTime) / (1000 * 1000);
-            addText("Depth reached: " + maxDeepeningLvl + " and Score: " + bestValue + " after " + diffTime + "ms");
     	}
-        System.out.println(iterationStop.lastTime);
     	return bestMove;
     }
     
