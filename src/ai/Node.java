@@ -1,6 +1,7 @@
 package ai;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 
 import kalaha.GameState;
 
@@ -23,6 +24,14 @@ public class Node
 		this.madeMove = moveToMake;
 		this.player = player;
 	}
+    
+    public Node getNextNode(int moveToTake) {
+        for (Node n : nextNodes) {
+            if (n.getMadeMove() == moveToTake)
+                return n;
+        }
+        return null;
+    }
 	
 	public int getUtilityValue()
 	{
@@ -39,35 +48,41 @@ public class Node
 		return madeMove;
 	}
 	
-	public int visit(int deepeningLvl, IterationStop iterationStop, PruningManager pruningManager)
+	public int visit(int deepeningLvl, IterationManager iterationManager, int alpha, int beta)
 	{
-		if(iterationStop.stop(deepeningLvl)) {
+		if(iterationManager.depthReached(deepeningLvl)) {
             return calculateBoardUtilityValue();
         }
         
         if (!hasBeenExpanded)
 		{
-            resetUtilityValue();
 			for(int i = 6; i >= 1; i--)
 			{
 				if(board.moveIsPossible(i))
 				{
 					Node nextNode = new Node(board, i, player);
 					nextNodes.add(nextNode);
-                    int value = nextNode.visit(deepeningLvl + 1, iterationStop, pruningManager);
-                    updateUtilityValue(value, nextNode.getMadeMove());
-                    if (pruningManager.pruneBranch(value, isMaxNode()))
-                        break;
 				}
 			}
             hasBeenExpanded = true;
-            return utilityValue;
 		}
-        else if (nextNodes.size() > 0) {
+        
+        // Check for Terminal Node
+        if (nextNodes.size() > 0) {
             resetUtilityValue();
-            for(Node n : nextNodes) {
-				int value = n.visit(deepeningLvl + 1, iterationStop, pruningManager);
-                updateUtilityValue(value, n.getMadeMove());
+            for(Node nextNode : nextNodes) {
+                if (iterationManager.timeOver())
+                    break;
+                int value = nextNode.visit(deepeningLvl + 1, iterationManager, alpha, beta);
+                updateUtilityValue(value, nextNode.getMadeMove());
+                if (isMaxNode()) {
+                    if (value > beta) break;
+                    alpha = Math.max(value, alpha);
+                }
+                else {
+                    if (value < alpha) break;
+                    beta = Math.min(value, alpha);
+                }
             }
             return utilityValue;
         }

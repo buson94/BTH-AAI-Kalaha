@@ -1,9 +1,7 @@
 package ai;
 
-import ai.Global;
 import java.io.*;
 import java.net.*;
-import java.util.*;
 import javax.swing.*;
 import java.awt.*;
 import kalaha.*;
@@ -211,20 +209,27 @@ public class AIClient implements Runnable
      */
     public int getMove(GameState currentBoard)
     {
-    	Node initialNode = new Node(currentBoard, -1, player);
-    	IterationStop iterationStop = new IterationStop((long) (4*Math.pow(10, 9)));
-        PruningManager pruningManager = new PruningManager();
+        long startTime = System.nanoTime();
+    	IterationManager iterationStop = new IterationManager((long) (4*Math.pow(10, 9)));
     	
     	int maxDeepeningLvl = 1;
-        int value = 0;
-    	while(!iterationStop.stop(-1) && maxDeepeningLvl < 100)
+        int bestValue = -Integer.MIN_VALUE;
+        int bestMove = 0;
+    	while(!iterationStop.stop(-1) && maxDeepeningLvl < 200)
     	{
+            Node initialNode = new Node(currentBoard, -1, player);
     		iterationStop.setMaxDeepeningLvl(maxDeepeningLvl);
-    		value = initialNode.visit(0, iterationStop, pruningManager);
+    		int value = initialNode.visit(0, iterationStop, Integer.MIN_VALUE, Integer.MAX_VALUE);
+            if (value > bestValue) {
+                bestValue = value;
+                bestMove = initialNode.getBestMove();
+            }
     		maxDeepeningLvl++;
+            long diffTime = (System.nanoTime() - startTime) / (1000 * 1000);
+            addText("Depth reached: " + maxDeepeningLvl + " and Score: " + bestValue + " after " + diffTime + "ms");
     	}
-    	addText("After: " + maxDeepeningLvl + " and Score: " + value);
-    	return initialNode.getBestMove();
+        System.out.println(iterationStop.lastTime);
+    	return bestMove;
     }
     
     /*public void thinkMoves(Node node)
