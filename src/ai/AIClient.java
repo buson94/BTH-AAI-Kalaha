@@ -1,6 +1,5 @@
 package ai;
 
-import ai.Global;
 import java.io.*;
 import java.net.*;
 import javax.swing.*;
@@ -9,6 +8,7 @@ import kalaha.*;
 
 /**
  * This is the class where the AI bot is defined.
+ * It uses the Minimax with iterative deepening.
  * 
  * @author Marvin Uwe Marken
  */
@@ -23,6 +23,7 @@ public class AIClient implements Runnable
     private Socket socket;
     private boolean running;
     private boolean connected;
+    private int moveCount;
     	
     /**
      * Creates a new client.
@@ -209,22 +210,104 @@ public class AIClient implements Runnable
      */
     public int getMove(GameState currentBoard)
     {
-    	// Creates a timer that gets a max. time of 4*10^9 nanoseconds (4 seconds)
-    	IterationStop iterationStop = new IterationStop((long) (3*Math.pow(10, 9)));
+        moveCount++;
+        long startTime = System.nanoTime();
+    	IterationManager iterationStop = new IterationManager((long) (5*Math.pow(10, 9)));
     	
-    	int maxDeepeningLvl = 1, value = 0, bestMove = 0;
-    	while(!iterationStop.stop(-1) && maxDeepeningLvl < 100)
+    	int maxDeepeningLvl = 2;
+        int bestValue = -Integer.MIN_VALUE;
+        int bestMove = 0;
+    	while(!iterationStop.timeOver() && maxDeepeningLvl < 16)
     	{
-        	// Creates an initial Node given the current Board, 
-        	// an invalid move to make (because it shouldn't start directly here) 
-        	// and the player number of the bot
-        	Node initialNode = new Node(currentBoard, -1, player);
     		iterationStop.setMaxDeepeningLvl(maxDeepeningLvl);
-    		value = initialNode.visit(0, iterationStop);
-    		bestMove = initialNode.getBestMove();
+            
+            Node root = new Node(currentBoard, player);
+    		int value = root.visit(0, iterationStop, bestValue, Integer.MAX_VALUE);
+            long diffTime = (System.nanoTime() - startTime) / (1000 * 1000);
+            if (value > bestValue) {
+                bestValue = value;
+                bestMove = root.getBestMove();
+                addText(moveCount + ". Better Move: " + bestMove + " in Depth: " + maxDeepeningLvl + " and Score: " + bestValue + " after " + diffTime + "ms");
+            }
     		maxDeepeningLvl++;
     	}
-    	addText("After: " + maxDeepeningLvl + " and Score: " + value);
     	return bestMove;
+    }
+    
+    /*public void thinkMoves(Node node)
+    {
+    	node.createNextNodes();
+		Node[] pNodes = node.getNextNodes();
+		
+    	// Simulating every possible move...
+    	for(int pAmbo = 0; pAmbo < 6; pAmbo++)
+    	{
+    		GameState simBoard = pNodes[pAmbo].getBoard();	//	Here it gets an exception?
+    		if(simBoard.moveIsPossible(pAmbo))
+    		{
+    			simBoard.makeMove(pAmbo+1);
+    			pNodes[pAmbo].setBoard(simBoard.clone());
+    		}
+    	}
+    	// ...and then setting the utility value of a node to the difference in score
+    	for(int i = 0; i < pNodes.length; i++)
+    	{
+    		GameState endBoard = pNodes[i].getBoard();
+    		int ownScore = 0, enemyScore = 0;
+    		for(int a = 0; a < 6; a++)
+    		{
+    			if(player == 1)
+    			{
+	    			ownScore += endBoard.getScore(1);
+	    			enemyScore += endBoard.getScore(2);
+    			}
+    			else
+    			{
+	    			ownScore += endBoard.getScore(2);
+	    			enemyScore += endBoard.getScore(1);
+    			}
+    		}
+    		int difference = ownScore - enemyScore;
+    		pNodes[i].setValue(difference);
+    	}
+		// If the game didn't end here, simulate next possible moves.
+		for(Node n : pNodes)
+			thinkMoves(n);
+    }*/
+    
+    /**
+     * A method to get the index of a minimum or maximum of an array.
+     * @param max If this boolean is true, the method looks for the maximum and if it's false, it looks for the minimum. 
+     * @param utility Is the array with numbers of possible wins in it 
+     * @return Index of the highest/lowest value 
+     */
+    /*public int minimaximize(boolean max)
+    {
+    	int indexValue = 0, value = max? -1000 : 1000;
+    	for(int index = 0; index < utility.length; index++)
+    	{
+    		if(max && utility[index] > value)
+	    	{
+    			value = utility[index];
+    			indexValue = index;
+    		}
+    		if(!max && utility[index] < value)
+    		{
+    			value = utility[index];
+    			indexValue = index;
+    		}
+    	}
+    	return indexValue + 1;
+    }*/
+    
+    /**
+     * Returns a random ambo number (1-6) used when making
+     * a random move.
+     * 
+     * @return Random ambo number
+     */
+    public int getRandom()
+    {
+        return 1 + (int)(Math.random() * 6);
     }
 }

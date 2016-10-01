@@ -1,29 +1,22 @@
 package ai;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 
 import kalaha.GameState;
 
 public class Node 
 {
-	private int player;
+	private final int player;
+	private final GameState board;
 	private int utilityValue = 0;
-	private GameState board;
-	private ArrayList<Node> nextNodes = new ArrayList<Node>(6);
 	private int bestMove = -1;
-	private int madeMove;
-	private boolean hasBeenExpanded = false;
-    private int alpha = Integer.MIN_VALUE;
-    private int beta = Integer.MAX_VALUE;
 	
-	public Node(GameState currentBoard, int moveToMake, int player)
+	public Node(GameState currentBoard, int player)
 	{
-		board = currentBoard.clone();
-		if(moveToMake > 0 && moveToMake <= 6)
-			board.makeMove(moveToMake);
-		
-		this.madeMove = moveToMake;
+		board = currentBoard;
 		this.player = player;
+        resetUtilityValue();
 	}
 	
 	public int getUtilityValue()
@@ -36,65 +29,54 @@ public class Node
 		return bestMove;
 	}
 	
-	public int getMadeMove()
+	public int visit(int deepeningLvl, IterationManager iterationManager, int alpha, int beta)
 	{
-		return madeMove;
-	}
-	
-	public int visit(int deepeningLvl, IterationStop iterationStop)
-	{
-		if(iterationStop.stop(deepeningLvl)) 
-		{
+		if(iterationManager.depthReached(deepeningLvl)) {
             return calculateBoardUtilityValue();
         }
-        
-        if (!hasBeenExpanded)
-		{
-            resetUtilityValue();
-			for(int i = 6; i >= 1; i--)
-			{
-				if(board.moveIsPossible(i))
-				{
-					Node nextNode = new Node(board, i, player);
-					nextNodes.add(nextNode);
-                    int value = nextNode.visit(deepeningLvl + 1, iterationStop);
-                    updateUtilityValue(value, nextNode.getMadeMove());
-                    if (pruneBranch(value, isMaxNode()))
-                        break;
-				}
-			}
-            hasBeenExpanded = true;
-            return utilityValue;
-		}
-        else if (nextNodes.size() > 0) 
+        boolean gameEnded = true;
+        for(int moveIndex = 6; moveIndex >= 1; moveIndex--)
         {
-            resetUtilityValue();
-            for(Node n : nextNodes) 
+            if (iterationManager.timeOver()) break;
+            if(board.moveIsPossible(moveIndex))
             {
-				int value = n.visit(deepeningLvl + 1, iterationStop);
-                updateUtilityValue(value, n.getMadeMove());
+                gameEnded = false;
+                GameState nextBoard = board.clone();
+                nextBoard.makeMove(moveIndex);
+                Node nextNode = new Node(nextBoard, player);
+                int value = nextNode.visit(deepeningLvl + 1, iterationManager, alpha, beta);
+                updateUtilityValue(value, moveIndex);
+                if (isMaxNode()) {
+                    if (value > beta) break;
+                    alpha = Math.max(value, alpha);
+                }
+                else {
+                    if (value < alpha) break;
+                    beta = Math.min(value, beta);
+                }
             }
-            return utilityValue;
         }
-        else 
-        {
+        if (gameEnded) {
             return calculateBoardUtilityValue();
+        } else {
+            return utilityValue;
         }
 	}
     
-    private void resetUtilityValue () 
-    {
+    private void resetUtilityValue () {
+        // Reset Utility Value
 		if(isMaxNode())
 			utilityValue = Integer.MIN_VALUE;
 		else
 			utilityValue = Integer.MAX_VALUE;
     }
 	
-	private void updateUtilityValue(int nextNodeUtilityValue, int move) 
-	{
+	private void updateUtilityValue(int nextNodeUtilityValue, int move) {
         if(isMaxNode())
         {
-            if(nextNodeUtilityValue > utilityValue)
+            if(nextNodeUtilityValue > utilityValue 
+             //  || nextNodeUtilityValue == utilityValue && Math.random() < 0.5
+               )
             {
                 utilityValue = nextNodeUtilityValue;
                 bestMove = move;
@@ -102,7 +84,9 @@ public class Node
         }
         else 
         {
-            if(nextNodeUtilityValue < utilityValue)
+            if(nextNodeUtilityValue < utilityValue 
+             //  || nextNodeUtilityValue == utilityValue && Math.random() < 0.5
+               )
             {
                 utilityValue = nextNodeUtilityValue;
                 bestMove = move;
@@ -111,38 +95,15 @@ public class Node
 	}
     
 	private int calculateBoardUtilityValue()
-	{
+	{   
 		int ownScore = 0, enemyScore = 0;
-		if(player == 1)
-		{
-			ownScore = board.getScore(1);
-			enemyScore = board.getScore(2);
-		}
-		else
-		{
-			ownScore = board.getScore(2);
-			enemyScore = board.getScore(1);
-		}
+        ownScore += board.getScore(player);
+        enemyScore += board.getScore((player % 2) + 1);
         utilityValue = ownScore - enemyScore;
 		return utilityValue;
 	}
     
-    private boolean isMaxNode() 
-    {
+    private boolean isMaxNode() {
         return board.getNextPlayer() == player;
-    }
-    
-    private boolean pruneBranch(int value, boolean isMaxNode) 
-    {
-        if (isMaxNode)
-        {
-            alpha = value > alpha ? value : alpha;
-            return value > beta;
-        }
-        else 
-        {
-            beta = value < beta ? value : beta;
-            return value < alpha;
-        }
     }
 }
