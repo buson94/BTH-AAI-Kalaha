@@ -28,13 +28,14 @@ public class Node
 	
 	public int visit(int deepeningLvl, IterationManager iterationManager, int alpha, int beta)
 	{
-		if(iterationManager.depthReached(deepeningLvl) 
-            || board.gameEnded())
+		if(iterationManager.depthReached(deepeningLvl)) {
             return calculateBoardUtilityValue();
-            
+        }
+        boolean isUtilityValueAssigned = false;
         for(int moveIndex = 6; moveIndex >= 1; moveIndex--)
         {
             if (iterationManager.timeOver()) break;
+            
             if(board.moveIsPossible(moveIndex))
             {
                 GameState nextBoard = board.clone();
@@ -50,9 +51,14 @@ public class Node
                     if (value < alpha) break;
                     beta = Math.min(value, beta);
                 }
+                isUtilityValueAssigned = true;
             }
         }
-        return utilityValue;
+        if (!isUtilityValueAssigned) {
+            return calculateBoardUtilityValue();
+        } else {
+            return utilityValue;
+        }
 	}
     
     private void resetUtilityValue () {
