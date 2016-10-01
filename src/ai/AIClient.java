@@ -8,7 +8,7 @@ import kalaha.*;
 
 /**
  * This is the class where the AI bot is defined.
- * It uses the Minimax with iterative deepening.
+ * It uses the Minimax with iterative deepening and alpha-beta pruning
  * 
  * @author Marvin Uwe Marken
  */
@@ -211,94 +211,40 @@ public class AIClient implements Runnable
     public int getMove(GameState currentBoard)
     {
         moveCount++;
+        // Saving the start time for later to see how long a "thought" took
         long startTime = System.nanoTime();
+        // Initialize the iteration manager with a maximum time of 5 seconds 
     	IterationManager iterationStop = new IterationManager((long) (5*Math.pow(10, 9)));
     	
+    	// Starting with a deepening maximum of 2, a best value of "minus infinite" and a best move of 0 (No best move yet) 
     	int maxDeepeningLvl = 2;
         int bestValue = -Integer.MIN_VALUE;
         int bestMove = 0;
+        // Now iterate through possible moves as long as the timer or the deepening level doesn't exceed its maximum
     	while(!iterationStop.timeOver() && maxDeepeningLvl < 16)
     	{
     		iterationStop.setMaxDeepeningLvl(maxDeepeningLvl);
             
+    		// Initialize the root node of the game tree with the current board and the player number
             Node root = new Node(currentBoard, player);
+            // Calculate the utility value with start deepening level of 0, the iteration manager, current best value as alpha and the "plus infinite" as beta
     		int value = root.visit(0, iterationStop, bestValue, Integer.MAX_VALUE);
+    		// Calculate the time that passed since the start of the AIs turn
             long diffTime = (System.nanoTime() - startTime) / (1000 * 1000);
-            if (value > bestValue) {
+            // Check if the calculated value is greater than the current best value. If yes then set it to the best value and best move
+            if (value > bestValue) 
+            {
                 bestValue = value;
                 bestMove = root.getBestMove();
+                // Debugging text to see when the AI thought which move was the best move for its current turn, 
+                // after which deepness, the possible score and how much time has passed
                 addText(moveCount + ". Better Move: " + bestMove + " in Depth: " + maxDeepeningLvl + " and Score: " + bestValue + " after " + diffTime + "ms");
             }
+            // Increase the max deepening level and repeat again
     		maxDeepeningLvl++;
     	}
     	return bestMove;
     }
-    
-    /*public void thinkMoves(Node node)
-    {
-    	node.createNextNodes();
-		Node[] pNodes = node.getNextNodes();
-		
-    	// Simulating every possible move...
-    	for(int pAmbo = 0; pAmbo < 6; pAmbo++)
-    	{
-    		GameState simBoard = pNodes[pAmbo].getBoard();	//	Here it gets an exception?
-    		if(simBoard.moveIsPossible(pAmbo))
-    		{
-    			simBoard.makeMove(pAmbo+1);
-    			pNodes[pAmbo].setBoard(simBoard.clone());
-    		}
-    	}
-    	// ...and then setting the utility value of a node to the difference in score
-    	for(int i = 0; i < pNodes.length; i++)
-    	{
-    		GameState endBoard = pNodes[i].getBoard();
-    		int ownScore = 0, enemyScore = 0;
-    		for(int a = 0; a < 6; a++)
-    		{
-    			if(player == 1)
-    			{
-	    			ownScore += endBoard.getScore(1);
-	    			enemyScore += endBoard.getScore(2);
-    			}
-    			else
-    			{
-	    			ownScore += endBoard.getScore(2);
-	    			enemyScore += endBoard.getScore(1);
-    			}
-    		}
-    		int difference = ownScore - enemyScore;
-    		pNodes[i].setValue(difference);
-    	}
-		// If the game didn't end here, simulate next possible moves.
-		for(Node n : pNodes)
-			thinkMoves(n);
-    }*/
-    
-    /**
-     * A method to get the index of a minimum or maximum of an array.
-     * @param max If this boolean is true, the method looks for the maximum and if it's false, it looks for the minimum. 
-     * @param utility Is the array with numbers of possible wins in it 
-     * @return Index of the highest/lowest value 
-     */
-    /*public int minimaximize(boolean max)
-    {
-    	int indexValue = 0, value = max? -1000 : 1000;
-    	for(int index = 0; index < utility.length; index++)
-    	{
-    		if(max && utility[index] > value)
-	    	{
-    			value = utility[index];
-    			indexValue = index;
-    		}
-    		if(!max && utility[index] < value)
-    		{
-    			value = utility[index];
-    			indexValue = index;
-    		}
-    	}
-    	return indexValue + 1;
-    }*/
     
     /**
      * Returns a random ambo number (1-6) used when making
