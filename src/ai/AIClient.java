@@ -238,7 +238,7 @@ public class AIClient implements Runnable
                 bestMove = root.getBestMove();
                 // Debugging text to see when the AI thought which move was the best move for its current turn, 
                 // after which deepness, the possible score and how much time has passed
-                addText(moveCount + ". Better Move: " + bestMove + " in Depth: " + maxDeepeningLvl + " and Score: " + bestValue + " after " + diffTime + "ms");
+                //addText(moveCount + ". Better Move: " + bestMove + " in Depth: " + maxDeepeningLvl + " and Score: " + bestValue + " after " + diffTime + "ms");
             }
             // Increase the max deepening level and repeat again
     		maxDeepeningLvl++;

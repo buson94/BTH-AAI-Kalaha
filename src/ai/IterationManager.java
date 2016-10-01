@@ -11,19 +11,14 @@ public class IterationManager
 		this.maxRunningTime = maxRunningTime;
 		startTime = System.nanoTime();
 	}
-    
-    public boolean stop(int currentDepth) {
-        return depthReached(currentDepth) || timeOver();
-    }
 	
 	public boolean depthReached(int currentDeepeningLvl)
 	{
 		return currentDeepeningLvl >= maxDeepeningLvl;
 	}
     
-    public boolean timeOver() {
-        
-        //return false;
+    public boolean timeOver() 
+    {
         long diff = System.nanoTime() - startTime;
         boolean timeOver = diff > maxRunningTime;
         return timeOver;   
