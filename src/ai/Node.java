@@ -1,8 +1,5 @@
 package ai;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-
 import kalaha.GameState;
 
 public class Node 
@@ -31,16 +28,15 @@ public class Node
 	
 	public int visit(int deepeningLvl, IterationManager iterationManager, int alpha, int beta)
 	{
-		if(iterationManager.depthReached(deepeningLvl)) {
+		if(iterationManager.depthReached(deepeningLvl) 
+            || board.gameEnded())
             return calculateBoardUtilityValue();
-        }
-        boolean gameEnded = true;
+            
         for(int moveIndex = 6; moveIndex >= 1; moveIndex--)
         {
             if (iterationManager.timeOver()) break;
             if(board.moveIsPossible(moveIndex))
             {
-                gameEnded = false;
                 GameState nextBoard = board.clone();
                 nextBoard.makeMove(moveIndex);
                 Node nextNode = new Node(nextBoard, player);
@@ -56,15 +52,10 @@ public class Node
                 }
             }
         }
-        if (gameEnded) {
-            return calculateBoardUtilityValue();
-        } else {
-            return utilityValue;
-        }
+        return utilityValue;
 	}
     
     private void resetUtilityValue () {
-        // Reset Utility Value
 		if(isMaxNode())
 			utilityValue = Integer.MIN_VALUE;
 		else
@@ -74,19 +65,15 @@ public class Node
 	private void updateUtilityValue(int nextNodeUtilityValue, int move) {
         if(isMaxNode())
         {
-            if(nextNodeUtilityValue > utilityValue 
-             //  || nextNodeUtilityValue == utilityValue && Math.random() < 0.5
-               )
+            if(nextNodeUtilityValue > utilityValue)
             {
                 utilityValue = nextNodeUtilityValue;
                 bestMove = move;
             }
-        }
+        } 
         else 
         {
-            if(nextNodeUtilityValue < utilityValue 
-             //  || nextNodeUtilityValue == utilityValue && Math.random() < 0.5
-               )
+            if(nextNodeUtilityValue < utilityValue)
             {
                 utilityValue = nextNodeUtilityValue;
                 bestMove = move;

@@ -217,7 +217,7 @@ public class AIClient implements Runnable
     	int maxDeepeningLvl = 2;
         int bestValue = -Integer.MIN_VALUE;
         int bestMove = 0;
-    	while(!iterationStop.timeOver() && maxDeepeningLvl < 16)
+    	while(!iterationStop.timeOver() && maxDeepeningLvl < 200)
     	{
     		iterationStop.setMaxDeepeningLvl(maxDeepeningLvl);
             
@@ -229,7 +229,7 @@ public class AIClient implements Runnable
                 bestMove = root.getBestMove();
                 addText(moveCount + ". Better Move: " + bestMove + " in Depth: " + maxDeepeningLvl + " and Score: " + bestValue + " after " + diffTime + "ms");
             }
-    		maxDeepeningLvl++;
+    		maxDeepeningLvl = maxDeepeningLvl + 2;
     	}
     	return bestMove;
     }
