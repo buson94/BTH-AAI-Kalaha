@@ -214,7 +214,7 @@ public class AIClient implements Runnable
         // Saving the start time for later to see how long a "thought" took
         long startTime = System.nanoTime();
         // Initialize the iteration manager with a maximum time of 5 seconds 
-    	IterationManager iterationStop = new IterationManager((long) (5*Math.pow(10, 9)));
+    	IterationManager iterationStop = new IterationManager((long) (4.99*Math.pow(10, 9)));
     	
     	// Starting with a deepening maximum of 2, a best value of "minus infinite" and a best move of 0 (No best move yet) 
     	int maxDeepeningLvl = 2;
@@ -238,7 +238,7 @@ public class AIClient implements Runnable
                 bestMove = root.getBestMove();
                 // Debugging text to see when the AI thought which move was the best move for its current turn, 
                 // after which deepness, the possible score and how much time has passed
-                //addText(moveCount + ". Better Move: " + bestMove + " in Depth: " + maxDeepeningLvl + " and Score: " + bestValue + " after " + diffTime + "ms");
+                // addText(moveCount + ". Better Move: " + bestMove + " in Depth: " + maxDeepeningLvl + " and Score: " + bestValue + " after " + diffTime + "ms");
             }
             // Increase the max deepening level and repeat again
     		maxDeepeningLvl++;
